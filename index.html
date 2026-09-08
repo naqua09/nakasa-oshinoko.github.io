@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="推しの子×なかさ">
+  <meta name="theme-color" content="#12131f">
+  <title>【推しの子】× お食事処なかさ コラボ飯ログ</title>
+  
+  <!-- Favicon / Icons / PWA -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <!-- Background Stars -->
+  <div class="bg-stars" id="bgStars"></div>
+
+  <!-- iOS App Container -->
+  <div class="app-container">
+    
+    <!-- iOS Navigation Bar (Sticky with blur) -->
+    <header class="ios-navbar" id="navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <span class="collab-badge">
+            <span class="star-icon">★</span> なかさ × 【推しの子】
+          </span>
+        </div>
+        <div class="navbar-center" id="navTitle">
+          コラボ飯ログ
+        </div>
+        <div class="navbar-right">
+          <button type="button" class="nav-icon-btn" id="shareBtn" aria-label="シェア">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </button>
+          <button type="button" class="nav-icon-btn" id="menuSettingsBtn" aria-label="設定">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Main Content -->
+    <main class="main-content" id="mainContent">
+      
+      <!-- iOS Large Title Section -->
+      <section class="large-title-section">
+        <div class="sub-headline">お食事処なかさ コラボカフェ</div>
+        <h1 class="large-title">
+          <span>食べたよチェック</span>
+          <span class="eye-star">✦</span>
+        </h1>
+        <p class="desc-text">コラボメニュー全16品の食べた記録・制覇状況をブラウザに保存できます。</p>
+      </section>
+
+      <!-- Overall Progress Card (iOS Inset Card Style) -->
+      <section class="progress-card">
+        <div class="progress-card-header">
+          <div class="progress-info">
+            <div class="progress-label">コンプリート達成率</div>
+            <div class="progress-numbers">
+              <span class="eaten-count" id="eatenCount">0</span>
+              <span class="total-count">/ 16 品</span>
+            </div>
+          </div>
+          <div class="progress-badge-wrapper">
+            <div class="trophy-badge" id="trophyBadge">
+              <span class="trophy-icon">⭐</span>
+              <span class="trophy-percent" id="trophyPercent">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+
+        <!-- Category Mini Progress -->
+        <div class="category-breakdown">
+          <div class="breakdown-item" data-cat="food">
+            <span class="cat-dot dot-food"></span>
+            <span class="cat-name">フード</span>
+            <span class="cat-stat" id="statFood">0/6</span>
+          </div>
+          <div class="breakdown-item" data-cat="dessert">
+            <span class="cat-dot dot-dessert"></span>
+            <span class="cat-name">デザート</span>
+            <span class="cat-stat" id="statDessert">0/4</span>
+          </div>
+          <div class="breakdown-item" data-cat="drink">
+            <span class="cat-dot dot-drink"></span>
+            <span class="cat-name">ドリンク</span>
+            <span class="cat-stat" id="statDrink">0/6</span>
+          </div>
+        </div>
+
+        <!-- Live Cyalume (Penlight) Lights Indicator -->
+        <div class="cyalume-shelf" id="cyalumeShelf">
+          <span class="cyalume-title">推しサイリウム点灯状況</span>
+          <div class="cyalume-lights">
+            <span class="cyalume-light light-ai" title="アイ" data-char="アイ"><span>★</span>アイ</span>
+            <span class="cyalume-light light-aqua" title="アクア" data-char="アクア"><span>★</span>アクア</span>
+            <span class="cyalume-light light-ruby" title="ルビー" data-char="ルビー"><span>★</span>ルビー</span>
+            <span class="cyalume-light light-kana" title="有馬かな" data-char="有馬かな"><span>★</span>かな</span>
+            <span class="cyalume-light light-akane" title="黒川あかね" data-char="黒川あかね"><span>★</span>あかね</span>
+            <span class="cyalume-light light-mem" title="MEMちょ" data-char="MEMちょ"><span>★</span>MEM</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Favorite Ranking & Stats Section (Cloudflare Workers) -->
+      <section class="ranking-card" id="rankingCard">
+        <div class="ranking-header">
+          <div class="ranking-title-area">
+            <span class="ranking-badge">👑 投票集計</span>
+            <h3 class="ranking-heading">みんなの最推し TOP3</h3>
+          </div>
+          <button type="button" class="ranking-reload-btn" id="reloadRankingBtn" aria-label="更新" title="最新の統計を再読み込み">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="my-favorite-box" id="myFavoriteBox">
+          <div class="my-fav-header">
+            <span class="my-fav-title">👑 あなたの最推し（各部門1品）</span>
+          </div>
+          <div class="my-fav-grid">
+            <div class="my-fav-item">
+              <span class="my-fav-cat">🍚 フード:</span>
+              <span class="my-fav-val" id="myFavFood">未設定</span>
+            </div>
+            <div class="my-fav-item">
+              <span class="my-fav-cat">🍰 デザート:</span>
+              <span class="my-fav-val" id="myFavDessert">未設定</span>
+            </div>
+            <div class="my-fav-item">
+              <span class="my-fav-cat">🍹 ドリンク:</span>
+              <span class="my-fav-val" id="myFavDrink">未設定</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ranking Department Tabs -->
+        <div class="ranking-tabs" id="rankingTabs">
+          <button type="button" class="ranking-tab-btn active" data-ranking-cat="food">🍚 フード</button>
+          <button type="button" class="ranking-tab-btn" data-ranking-cat="dessert">🍰 デザート</button>
+          <button type="button" class="ranking-tab-btn" data-ranking-cat="drink">🍹 ドリンク</button>
+        </div>
+
+        <div class="ranking-list" id="rankingList">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+        <div class="ranking-footer-meta" id="rankingMeta">
+          <span id="rankingTotalVotes">部門投票数: 0 票</span>
+          <span class="ranking-rule-note">※ 各部門1日1回投票可能</span>
+          <span id="rankingStatusBadge" class="ranking-status-badge">集計中</span>
+        </div>
+      </section>
+
+      <!-- iOS Search Bar -->
+      <div class="ios-search-container">
+        <div class="ios-search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" class="ios-search-input" placeholder="メニュー名やキャラ名で検索..." autocomplete="off">
+          <button type="button" id="searchClearBtn" class="search-clear-btn" aria-label="クリア" style="display: none;">✕</button>
+        </div>
+      </div>
+
+      <!-- iOS Segmented Control (Category Switcher) -->
+      <div class="sticky-controls" id="stickyControls">
+        <div class="ios-segmented-control" role="tablist">
+          <button type="button" class="segment-btn active" data-filter="all" role="tab">すべて</button>
+          <button type="button" class="segment-btn" data-filter="food" role="tab">フード</button>
+          <button type="button" class="segment-btn" data-filter="dessert" role="tab">デザート</button>
+          <button type="button" class="segment-btn" data-filter="drink" role="tab">ドリンク</button>
+          <button type="button" class="segment-btn" data-filter="uneaten" role="tab">未食のみ</button>
+        </div>
+
+        <!-- Character Filter Pills (Horizontal Scroll) -->
+        <div class="char-filter-wrapper">
+          <div class="char-filter-scroll" id="charFilterScroll">
+            <button type="button" class="char-pill active" data-char="all">全キャラ</button>
+            <button type="button" class="char-pill pill-ai" data-char="アイ">★ アイ</button>
+            <button type="button" class="char-pill pill-aqua" data-char="アクア">★ アクア</button>
+            <button type="button" class="char-pill pill-ruby" data-char="ルビー">★ ルビー</button>
+            <button type="button" class="char-pill pill-kana" data-char="有馬かな">★ 有馬かな</button>
+            <button type="button" class="char-pill pill-akane" data-char="黒川あかね">★ 黒川あかね</button>
+            <button type="button" class="char-pill pill-mem" data-char="MEMちょ">★ MEMちょ</button>
+            <button type="button" class="char-pill pill-bkomachi" data-char="B小町">★ B小町</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu Items List (iOS Inset Grouped Table View) -->
+      <section class="menu-sections-container" id="menuSectionsContainer">
+        <!-- Rendered dynamically by app.js -->
+      </section>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">🍽️</div>
+        <div class="empty-text">該当するメニューがありません</div>
+      </div>
+
+      <!-- Quick Action Buttons Footer -->
+      <div class="footer-actions">
+        <button type="button" class="ios-btn-secondary" id="shareResultBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          制覇状況をポスト
+        </button>
+        <button type="button" class="ios-btn-text" id="resetConfirmBtn">
+          チェックをリセット
+        </button>
+      </div>
+
+      <footer class="app-footer">
+        <div class="disclaimer-box">
+          <p class="disclaimer-title">⚠️ ご注意・免責事項</p>
+          <p class="disclaimer-text">
+            本システムはファン有志による非公式ファンサイトです。<br>
+            <strong>実際に店舗での注文を行うことはできません。</strong><br>
+            また、原作者様・アニメ製作委員会様・コラボ開催店舗（お食事処なかさ）様とは一切関係ありません。
+          </p>
+        </div>
+        <div class="storage-warning-box">
+          <p class="storage-warning-title">💾 データの保存に関する大切なお知らせ</p>
+          <p class="storage-warning-text">
+            本アプリの記録データはお使いの<strong>ブラウザ（LocalStorage）にのみ保存</strong>されています。<br>
+            そのため、<strong>ブラウザのキャッシュクリアや履歴の全消去を行うと、記録がすべて消えてしまいます。</strong><br>
+            大切な記録を残すために、右上の「…」メニュー内にある<strong>「記録データをエクスポート (JSON)」</strong>から定期的にバックアップを保存しておくことをおすすめします。
+          </p>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Bottom Sheet Modal (Detail & Note) -->
+    <div class="modal-backdrop" id="bottomSheetBackdrop">
+      <div class="ios-bottom-sheet" id="bottomSheet">
+        <!-- Pull bar -->
+        <div class="sheet-pull-bar"></div>
+        
+        <div class="sheet-header">
+          <div class="sheet-meta">
+            <span class="sheet-char-badge" id="sheetCharBadge">アイ</span>
+            <span class="sheet-category-badge" id="sheetCatBadge">フード</span>
+          </div>
+          <h2 class="sheet-title" id="sheetTitle">メニュー名</h2>
+          <button type="button" class="sheet-close-btn" id="sheetCloseBtn" aria-label="閉じる">✕</button>
+        </div>
+
+        <div class="sheet-body">
+          <!-- Eaten Status Switch -->
+          <div class="sheet-section ios-cell-group">
+            <div class="ios-cell">
+              <span class="cell-label">食べた！</span>
+              <label class="ios-switch">
+                <input type="checkbox" id="sheetCheckInput">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Visit History Section (複数回訪問対応) -->
+          <div class="sheet-section history-section-box" id="historySection">
+            <div class="history-section-header">
+              <span class="section-label">📅 訪問・喫食履歴</span>
+              <span class="history-total-badge" id="historyTotalBadge">合計 0杯/皿</span>
+            </div>
+            <div class="history-list" id="historyList">
+              <!-- Dynamically rendered rows: Date picker + Stepper + Delete button -->
+            </div>
+            <button type="button" class="add-history-btn" id="addHistoryBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              訪問日・杯数を追加
+            </button>
+          </div>
+
+          <!-- Favorite Section (最推し設定) -->
+          <div class="sheet-section ios-cell-group">
+            <div class="ios-cell cell-favorite">
+              <div class="cell-label-group">
+                <span class="cell-label" id="sheetFavoriteLabel">👑 最推しに設定</span>
+                <span class="cell-sublabel" id="sheetFavoriteSublabel">この部門のお気に入りメニュー（1日1回限定）</span>
+              </div>
+              <label class="ios-switch">
+                <input type="checkbox" id="sheetFavoriteInput">
+                <span class="switch-slider switch-slider-gold"></span>
+              </label>
+            </div>
+            <div class="cell-notice-box">
+              <span class="cell-notice-text" id="sheetFavoriteNotice">※ 最推し投票は各部門1日1回のみ選択・変更できます。</span>
+            </div>
+          </div>
+
+          <!-- Note / Review Section -->
+          <div class="sheet-section">
+            <label class="section-label" for="sheetMemoInput">感想・推しポイントメモ</label>
+            <textarea id="sheetMemoInput" class="ios-textarea" placeholder="例: 見た目もかわいくて大満足！特典コースターもゲット★" rows="3"></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="sheet-actions">
+            <button type="button" class="ios-btn-primary" id="saveSheetBtn">保存する</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings / Data Modal -->
+    <div class="modal-backdrop" id="settingsModalBackdrop">
+      <div class="ios-bottom-sheet" id="settingsModal">
+        <div class="sheet-pull-bar"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">データ管理 & バックアップ</h2>
+          <button type="button" class="sheet-close-btn" id="settingsCloseBtn">✕</button>
+        </div>
+        <div class="sheet-body">
+          <!-- Appearance / Theme Section -->
+          <div class="ios-cell-group">
+            <div class="ios-cell">
+              <span class="cell-label">外観テーマ</span>
+              <div class="theme-selector" id="themeSelector">
+                <button type="button" class="theme-btn active" data-theme="auto">端末連動</button>
+                <button type="button" class="theme-btn" data-theme="light">ライト</button>
+                <button type="button" class="theme-btn" data-theme="dark">ダーク</button>
+              </div>
+            </div>
+          <!-- Cache Clear Warning Card -->
+          <div class="modal-warning-card">
+            <div class="warning-icon-area">⚠️</div>
+            <div class="warning-content">
+              <strong class="warning-title">キャッシュ・履歴消去にご注意</strong>
+              <p class="warning-desc">記録はお使いのブラウザ（端末内）にのみ保存されています。ブラウザのキャッシュクリアや履歴消去を行うとデータがすべて消えるため、定期的に「エクスポート」でバックアップを保存してください。</p>
+            </div>
+          </div>
+
+          <div class="ios-cell-group">
+            <div class="ios-cell interactive-cell" id="exportDataBtn">
+              <span class="cell-label">記録データをエクスポート (JSON)</span>
+              <span class="cell-chevron">›</span>
+            </div>
+            <label class="ios-cell interactive-cell" for="importFile">
+              <span class="cell-label">記録データをインポート</span>
+              <input type="file" id="importFile" accept=".json" style="display: none;">
+              <span class="cell-chevron">›</span>
+            </label>
+            <div class="ios-cell interactive-cell text-danger" id="dangerResetBtn">
+              <span class="cell-label">すべての記録を初期化</span>
+              <span class="cell-chevron">›</span>
+            </div>
+          </div>
+          <div class="help-text">
+            機種変更時やお使いのブラウザをクリアする際は、事前に「エクスポート」で保存しておくことをおすすめします。
+          </div>
+
+          <div class="modal-disclaimer">
+            <p><strong>【非公式ファンサイトについて】</strong></p>
+            <p>本システムは個人ファンによる非公式の記録ツールです。店頭での実際の注文を行うことはできません。原作公式・アニメ製作委員会・コラボ開催店舗（お食事処なかさ）様とは一切関係ありません。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complete Toast / Celebration Banner -->
+    <div class="complete-toast" id="completeToast">
+      <div class="toast-star">🌟</div>
+      <div class="toast-content">
+        <div class="toast-title">全品制覇おめでとうございます！！</div>
+        <div class="toast-desc">なかさ×推しの子 コラボメニューをすべてコンプリートしました！</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
