@@ -1127,45 +1127,33 @@ function closeSettingsModal() {
 function shareCurrentProgress() {
   const total = MENU_DATA.length;
   let eaten = 0;
-  const eatenNames = [];
+  let foodEaten = 0;
+  let dessertEaten = 0;
+  let drinkEaten = 0;
 
   MENU_DATA.forEach(item => {
     const log = getItemLog(item.id);
     if (log.eaten) {
       eaten++;
-      eatenNames.push(item.name);
+      if (item.category === 'food') foodEaten++;
+      else if (item.category === 'dessert') dessertEaten++;
+      else if (item.category === 'drink') drinkEaten++;
     }
   });
 
   const percent = Math.round((eaten / total) * 100);
   const title = `【推しの子】× お食事処なかさ コラボ飯ログ`;
-  let shareText = `${title}\n現在 ${eaten}/${total}品制覇（達成率${percent}%）！⭐\n`;
 
-  // 3部門最推しのシェア文
-  const favParts = [];
-  if (departmentFavorites.food) {
-    const item = MENU_DATA.find(i => i.id === departmentFavorites.food);
-    if (item) favParts.push(`・🍚 フード: 【${item.name}】`);
-  }
-  if (departmentFavorites.dessert) {
-    const item = MENU_DATA.find(i => i.id === departmentFavorites.dessert);
-    if (item) favParts.push(`・🍰 デザート: 【${item.name}】`);
-  }
-  if (departmentFavorites.drink) {
-    const item = MENU_DATA.find(i => i.id === departmentFavorites.drink);
-    if (item) favParts.push(`・🍹 ドリンク: 【${item.name}】`);
+  let shareText = `${title}\n`;
+  if (eaten === total) {
+    shareText += `🎉 全${total}品コンプリート達成！！🌟\n`;
+  } else {
+    shareText += `全${total}品中 ${eaten}品制覇（達成率${percent}%）！⭐\n`;
   }
 
-  if (favParts.length > 0) {
-    shareText += `👑 私の部門別最推し:\n${favParts.join('\n')}\n`;
-  }
-
-  if (eaten > 0 && eaten <= 3) {
-    shareText += `食べたメニュー: ${eatenNames.join('、')}\n`;
-  } else if (eaten > 3) {
-    shareText += `食べたメニュー: ${eatenNames.slice(0, 2).join('、')} ほか計${eaten}品\n`;
-  }
-
+  shareText += `🍚フード: ${foodEaten}/6品\n`;
+  shareText += `🍰デザート: ${dessertEaten}/4品\n`;
+  shareText += `🍹ドリンク: ${drinkEaten}/6品\n\n`;
   shareText += `#推しの子 #お食事処なかさ #なかさ推しの子コラボ`;
 
   const shareUrl = window.location.href;
