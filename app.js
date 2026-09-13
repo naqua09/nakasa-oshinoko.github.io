@@ -209,6 +209,7 @@ let editingItemId = null;
 let previousCompleted = false;
 let globalRankingStats = null; // Cloudflare Workerから取得した統計データ
 let currentRankingCategory = 'food'; // ランキング表示中の部門 ('food' | 'dessert' | 'drink')
+let currentViewLap = 1; // プログレス表示・シェア対象の周回 (1, 2, 3...)
 
 // 指定部門で本日すでに最推しを投票/変更したか判定
 function hasVotedCategoryToday(category) {
@@ -413,6 +414,8 @@ const statDrinkEl = document.getElementById('statDrink');
 const navbar = document.getElementById('navbar');
 const navTitle = document.getElementById('navTitle');
 const completeToast = document.getElementById('completeToast');
+const progressLabel = document.getElementById('progressLabel');
+const lapPillGroup = document.getElementById('lapPillGroup');
 
 // ランキング・最推し関連要素
 const rankingCard = document.getElementById('rankingCard');
@@ -528,6 +531,7 @@ function initTheme() {
 function initApp() {
   initTheme();
   loadLogs();
+  currentViewLap = getActiveLap();
   updateFavoriteDisplay();
   renderMenuList();
   updateCyalumeShelf();
@@ -652,8 +656,11 @@ function renderMenuList() {
   });
 }
 
-// 達成率・進捗バー更新
-function updateStats() {
+// ==========================================================================
+// 周回（Lap）進捗計算ヘルパー
+// ==========================================================================
+// 指定した周回 (lap = 1, 2, 3...) における進捗を計算
+function getLapProgress(lap = 1) {
   const total = MENU_DATA.length;
   let eaten = 0;
   let foodEaten = 0, foodTotal = 0;
@@ -662,33 +669,119 @@ function updateStats() {
 
   MENU_DATA.forEach(item => {
     const log = getItemLog(item.id);
+    const count = log.count || (log.eaten ? 1 : 0);
+
     if (item.category === 'food') foodTotal++;
     if (item.category === 'dessert') dessertTotal++;
     if (item.category === 'drink') drinkTotal++;
 
-    if (log.eaten) {
+    if (count >= lap) {
       eaten++;
       if (item.category === 'food') foodEaten++;
-      if (item.category === 'dessert') dessertEaten++;
-      if (item.category === 'drink') drinkEaten++;
+      else if (item.category === 'dessert') dessertEaten++;
+      else if (item.category === 'drink') drinkEaten++;
     }
   });
 
-  const percent = Math.round((eaten / total) * 100);
+  const percent = total > 0 ? Math.round((eaten / total) * 100) : 0;
+  const isCompleted = (eaten === total && total > 0);
 
-  eatenCountEl.textContent = eaten;
-  trophyPercentEl.textContent = `${percent}%`;
-  progressFillEl.style.width = `${percent}%`;
+  return {
+    lap,
+    eaten,
+    total,
+    percent,
+    isCompleted,
+    foodEaten,
+    foodTotal,
+    dessertEaten,
+    dessertTotal,
+    drinkEaten,
+    drinkTotal
+  };
+}
 
-  statFoodEl.textContent = `${foodEaten}/${foodTotal}`;
-  statDessertEl.textContent = `${dessertEaten}/${dessertTotal}`;
-  statDrinkEl.textContent = `${drinkEaten}/${drinkTotal}`;
+// 選択・表示可能な最大周回数を算出
+function getMaxAvailableLap() {
+  const lap1 = getLapProgress(1);
+  let maxCount = 0;
+  MENU_DATA.forEach(item => {
+    const log = getItemLog(item.id);
+    const count = log.count || (log.eaten ? 1 : 0);
+    if (count > maxCount) maxCount = count;
+  });
 
-  // 全制覇（100%達成）時の祝福演出
-  if (eaten === total && !previousCompleted && total > 0) {
-    triggerCelebration();
+  // 1周目を制覇していれば、最低でも2周目まで選べる
+  if (lap1.isCompleted) {
+    return Math.max(2, maxCount + 1);
   }
-  previousCompleted = (eaten === total);
+  // 1周目未制覇でも2杯以上食べたものがあればその杯数まで選べる
+  return Math.max(1, maxCount);
+}
+
+// 現在ユーザーが挑戦中の最新周回数を算出
+function getActiveLap() {
+  const maxLap = getMaxAvailableLap();
+  for (let l = 1; l <= maxLap; l++) {
+    const p = getLapProgress(l);
+    if (!p.isCompleted) return l;
+  }
+  return maxLap;
+}
+
+// 達成率・進捗バー更新（周回対応）
+function updateStats() {
+  const maxLap = getMaxAvailableLap();
+  if (currentViewLap > maxLap) currentViewLap = maxLap;
+  if (currentViewLap < 1) currentViewLap = 1;
+
+  const stats = getLapProgress(currentViewLap);
+
+  eatenCountEl.textContent = stats.eaten;
+  trophyPercentEl.textContent = `${stats.percent}%`;
+  progressFillEl.style.width = `${stats.percent}%`;
+
+  statFoodEl.textContent = `${stats.foodEaten}/${stats.foodTotal}`;
+  statDessertEl.textContent = `${stats.dessertEaten}/${stats.dessertTotal}`;
+  statDrinkEl.textContent = `${stats.drinkEaten}/${stats.drinkTotal}`;
+
+  // 周回切り替えピル（maxLap > 1 の時のみ表示）
+  if (lapPillGroup) {
+    if (maxLap > 1) {
+      lapPillGroup.style.display = 'inline-flex';
+      lapPillGroup.innerHTML = '';
+
+      for (let l = 1; l <= maxLap; l++) {
+        const lapStats = getLapProgress(l);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `lap-pill-btn ${l === currentViewLap ? 'active' : ''} ${lapStats.isCompleted ? 'is-completed' : ''}`;
+        btn.textContent = `${l}周目${lapStats.isCompleted ? '✓' : ''}`;
+        btn.setAttribute('data-lap', l);
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentViewLap = l;
+          updateStats();
+        });
+        lapPillGroup.appendChild(btn);
+      }
+
+      if (progressLabel) {
+        progressLabel.textContent = `${currentViewLap}周目 達成率`;
+      }
+    } else {
+      lapPillGroup.style.display = 'none';
+      if (progressLabel) {
+        progressLabel.textContent = 'コンプリート達成率';
+      }
+    }
+  }
+
+  // 周回コンプリート（100%達成）時の祝福演出
+  if (stats.isCompleted && !previousCompleted && stats.total > 0) {
+    triggerCelebration(currentViewLap);
+  }
+  previousCompleted = stats.isCompleted;
 }
 
 
@@ -714,16 +807,27 @@ function updateCyalumeShelf() {
 }
 
 
-// 全制覇セレブレーション演出
-function triggerCelebration() {
-  // トースト表示
-  completeToast.classList.add('is-visible');
-  setTimeout(() => {
-    completeToast.classList.remove('is-visible');
-  }, 4500);
+// 全制覇セレブレーション演出（周回対応）
+function triggerCelebration(lap = 1) {
+  if (completeToast) {
+    const toastTitle = completeToast.querySelector('.toast-title');
+    const toastDesc = completeToast.querySelector('.toast-desc');
+    if (toastTitle && toastDesc) {
+      if (lap > 1) {
+        toastTitle.textContent = `🎉 ${lap}周目 全品コンプリート達成！！`;
+        toastDesc.textContent = `全16品 × ${lap}周制覇！素晴らしい推し活記録です⭐`;
+      } else {
+        toastTitle.textContent = '🎉 全メニュー制覇おめでとうございます！！';
+        toastDesc.textContent = '全16品コンプリート達成！推しへの愛が輝いています⭐';
+      }
+    }
+    completeToast.classList.add('is-visible');
+    setTimeout(() => {
+      completeToast.classList.remove('is-visible');
+    }, 4500);
+  }
 }
 
-// チェック切り替え（ワンタップ）
 // チェック切り替え（ワンタップ）
 function toggleItemCheck(id) {
   const log = getItemLog(id);
@@ -1126,34 +1230,37 @@ function closeSettingsModal() {
 
 function shareCurrentProgress() {
   const total = MENU_DATA.length;
-  let eaten = 0;
-  let foodEaten = 0;
-  let dessertEaten = 0;
-  let drinkEaten = 0;
+  const currentStats = getLapProgress(currentViewLap);
+  const lap1Stats = getLapProgress(1);
 
-  MENU_DATA.forEach(item => {
-    const log = getItemLog(item.id);
-    if (log.eaten) {
-      eaten++;
-      if (item.category === 'food') foodEaten++;
-      else if (item.category === 'dessert') dessertEaten++;
-      else if (item.category === 'drink') drinkEaten++;
-    }
-  });
-
-  const percent = Math.round((eaten / total) * 100);
   const title = `【推しの子】× お食事処なかさ コラボ飯ログ`;
-
   let shareText = `${title}\n`;
-  if (eaten === total) {
-    shareText += `🎉 全${total}品コンプリート達成！！🌟\n`;
+
+  if (currentViewLap === 1) {
+    if (currentStats.isCompleted) {
+      shareText += `🎉 全${total}品コンプリート達成！！🌟\n`;
+    } else {
+      shareText += `全${total}品中 ${currentStats.eaten}品制覇（達成率${currentStats.percent}%）！⭐\n`;
+    }
   } else {
-    shareText += `全${total}品中 ${eaten}品制覇（達成率${percent}%）！⭐\n`;
+    // 2周目以降
+    if (currentStats.isCompleted) {
+      const stars = '🌟'.repeat(Math.min(currentViewLap, 4));
+      shareText += `🎊 ${currentViewLap}周目 全品コンプリート達成！！${stars}\n`;
+      shareText += `（全${total}品 × ${currentViewLap}周制覇）\n`;
+    } else {
+      shareText += `🔥 ${currentViewLap}周目挑戦中！ ${currentStats.eaten}/${total}品制覇（${currentStats.percent}%）⭐\n`;
+      if (currentViewLap === 2 && lap1Stats.isCompleted) {
+        shareText += `（1周目全制覇済🎉）\n`;
+      } else if (currentViewLap > 2) {
+        shareText += `（${currentViewLap - 1}周目まで全制覇済🎉）\n`;
+      }
+    }
   }
 
-  shareText += `🍚フード: ${foodEaten}/6品\n`;
-  shareText += `🍰デザート: ${dessertEaten}/4品\n`;
-  shareText += `🍹ドリンク: ${drinkEaten}/6品\n\n`;
+  shareText += `🍚フード: ${currentStats.foodEaten}/${currentStats.foodTotal}品\n`;
+  shareText += `🍰デザート: ${currentStats.dessertEaten}/${currentStats.dessertTotal}品\n`;
+  shareText += `🍹ドリンク: ${currentStats.drinkEaten}/${currentStats.drinkTotal}品\n\n`;
   shareText += `#推しの子 #お食事処なかさ #なかさ推しの子コラボ`;
 
   const shareUrl = window.location.href;
