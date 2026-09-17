@@ -1,0 +1,399 @@
+/* ==========================================================================
+   【推しの子】× 有馬温泉 お買い物ラリー スタイルシート (rally.css)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. サマリーカード拡張（特典カード獲得状況）
+   -------------------------------------------------------------------------- */
+.rally-summary-grid {
+  display: block;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ios-separator);
+}
+
+.rally-summary-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rally-box-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rally-box-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.rally-box-val.gold {
+  color: #ffe600;
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(255, 230, 0, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   2. サマリー内訳（2カラム化 & cat-name改行防止）
+   -------------------------------------------------------------------------- */
+.progress-card .category-breakdown {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.category-breakdown .cat-name {
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.category-breakdown .breakdown-item {
+  min-width: 0;
+  gap: 5px;
+}
+
+/* --------------------------------------------------------------------------
+   3. 店舗カードリスト
+   -------------------------------------------------------------------------- */
+.rally-spots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.rally-spot-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.rally-spot-card:active {
+  transform: scale(0.985);
+}
+
+.rally-spot-card.completed {
+  background: var(--bg-card-active);
+  border-color: rgba(255, 42, 133, 0.35);
+  box-shadow: 0 4px 20px rgba(255, 42, 133, 0.12);
+}
+
+.rally-spot-card.completed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(to bottom, #ff2a85, #00b0ff);
+}
+
+.spot-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spot-info-left {
+  flex: 1;
+}
+
+.spot-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.spot-number-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-tertiary);
+}
+
+.spot-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.spot-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.spot-reading {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+/* 対象商品 & 価格 */
+.spot-product-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin: 10px 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.product-label-wrap {
+  flex: 1;
+}
+
+.product-guide-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ff94c2;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.product-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.product-price-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* 上大坊専用カード内注意書き */
+.spot-special-warning {
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(255, 214, 0, 0.6);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  font-size: 13px;
+  color: #ffe066;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.warning-mini-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #1a0e00;
+  background: #ffd600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.spot-special-warning strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* チェックボックストグル */
+.spot-check-wrap {
+  flex-shrink: 0;
+}
+
+.custom-checkbox-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--checkbox-border);
+  background: var(--checkbox-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: transparent;
+  padding: 0;
+}
+
+.custom-checkbox-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.custom-checkbox-btn:active {
+  transform: scale(0.92);
+}
+
+.completed .custom-checkbox-btn {
+  background: linear-gradient(135deg, #ff2a85 0%, #ff4081 100%);
+  border-color: #ff2a85;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 42, 133, 0.45);
+}
+
+/* カードフッター（特典カード獲得バッジ、メモ・日付表示、詳細ボタン） */
+.spot-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ios-separator);
+  font-size: 12px;
+}
+
+.spot-card-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(120, 120, 130, 0.25);
+  color: var(--text-primary);
+  border: 1px solid rgba(120, 120, 130, 0.5);
+  transition: all 0.25s ease;
+}
+
+.completed .card-reward-badge {
+  background: #ffd700;
+  color: #3a2800;
+  font-weight: 800;
+  border: 1.5px solid #b8860b;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.35);
+}
+
+/* Googleマップリンクボタン */
+.spot-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 122, 255, 0.1);
+  color: #0066cc;
+  border: 1.5px solid rgba(0, 122, 255, 0.4);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .spot-map-btn,
+:root:not([data-theme="light"]) .spot-map-btn {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.spot-map-btn:hover {
+  background: rgba(0, 122, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.spot-map-btn:active {
+  transform: scale(0.94);
+}
+
+
+
+/* --------------------------------------------------------------------------
+   5. 相互誘導バナー (カフェ ⇔ ラリー)
+   -------------------------------------------------------------------------- */
+.rally-cross-banner {
+  background: linear-gradient(135deg, rgba(255, 42, 133, 0.12) 0%, rgba(0, 176, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 42, 133, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.rally-cross-banner:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 42, 133, 0.45);
+  box-shadow: 0 6px 20px rgba(255, 42, 133, 0.15);
+}
+
+.cross-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cross-banner-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.cross-banner-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.cross-banner-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cross-banner-arrow {
+  color: var(--text-tertiary);
+  font-size: 18px;
+  font-weight: 300;
+}

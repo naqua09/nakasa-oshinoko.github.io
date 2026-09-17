@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="推しの子ラリー">
+  <meta name="theme-color" content="#12131f">
+  <title>【推しの子】× 有馬温泉 お買い物ラリー達成度ログ</title>
+
+  <!-- OGP / Meta -->
+  <meta name="description" content="【推しの子】× 有馬温泉 お買い物ラリーの達成度・オリジナルカード獲得状況・利用金額を記録できるWebアプリです。">
+  <meta property="og:title" content="【推しの子】× 有馬温泉 お買い物ラリー達成度ログ">
+  <meta property="og:description" content="有馬温泉の各店舗を巡ってオリジナルカードをコンプリートしよう！達成度を記録・シェアできます。">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <!-- Favicon / Icons -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛍️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="rally.css">
+</head>
+<body>
+  <!-- Background Stars -->
+  <div class="bg-stars" id="bgStars"></div>
+
+  <!-- iOS App Container -->
+  <div class="app-container">
+    
+    <!-- iOS Navigation Bar (Sticky with blur) -->
+    <header class="ios-navbar" id="navbar">
+      <div class="navbar-content">
+        <div class="navbar-left">
+          <span class="collab-badge">
+            <span class="star-icon">★</span> 有馬温泉 × 【推しの子】
+          </span>
+        </div>
+        <div class="navbar-center" id="navTitle">
+          お買い物ラリー
+        </div>
+        <div class="navbar-right">
+          <button type="button" class="nav-icon-btn" id="shareBtn" aria-label="シェア" title="達成度をシェア">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </button>
+          <button type="button" class="nav-icon-btn" id="menuSettingsBtn" aria-label="設定" title="データ管理">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Main Content -->
+    <main class="main-content" id="mainContent">
+
+      <!-- Navigation Switcher (コラボカフェ ⇔ お買い物ラリー) -->
+      <div class="event-nav-container">
+        <nav class="event-nav-switcher" aria-label="イベント切替">
+          <a href="index.html" class="event-nav-tab tab-cafe">
+            <span class="tab-icon">🍽️</span>
+            <div class="tab-info">
+              <span class="tab-name">コラボカフェ</span>
+              <span class="tab-badge">全16品</span>
+            </div>
+          </a>
+          <a href="rally.html" class="event-nav-tab tab-rally active">
+            <span class="tab-icon">🛍️</span>
+            <div class="tab-info">
+              <span class="tab-name">お買い物ラリー</span>
+              <span class="tab-badge">全6店舗</span>
+            </div>
+          </a>
+        </nav>
+      </div>
+      
+      <!-- iOS Large Title Section -->
+      <section class="large-title-section">
+        <div class="sub-headline">有馬温泉 コラボ企画</div>
+        <h1 class="large-title">
+          <span>お買い物ラリー</span>
+          <span class="eye-star">✦</span>
+        </h1>
+        <p class="desc-text">対象店舗で商品購入や入浴をしてオリジナルカードをGET！全6店舗の巡回状況をブラウザに記録できます。</p>
+      </section>
+
+      <!-- Overall Progress Card -->
+      <section class="progress-card">
+        <div class="progress-card-header">
+          <div class="progress-info">
+            <div class="progress-label-row">
+              <span class="progress-label" id="progressLabel">ラリー達成度</span>
+            </div>
+            <div class="progress-numbers">
+              <span class="eaten-count" id="completedCount">0</span>
+              <span class="total-count">/ 6 店舗</span>
+            </div>
+          </div>
+          <div class="progress-badge-wrapper">
+            <div class="trophy-badge" id="trophyBadge">
+              <span class="trophy-icon">⭐</span>
+              <span class="trophy-percent" id="trophyPercent">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+
+        <!-- Extra Stats Row (カード獲得状況) -->
+        <div class="rally-summary-grid">
+          <div class="rally-summary-box">
+            <span class="rally-box-label">🎁 特典オリジナルカード獲得</span>
+            <span class="rally-box-val" id="cardCount">0 / 6 枚</span>
+          </div>
+        </div>
+
+        <!-- Category Mini Breakdown -->
+        <div class="category-breakdown" style="margin-top: 12px;">
+          <div class="breakdown-item" data-cat="onsen">
+            <span class="cat-dot" style="background: #00b0ff;"></span>
+            <span class="cat-name">♨️ 日帰り温泉</span>
+            <span class="cat-stat" id="statOnsen">0/2</span>
+          </div>
+          <div class="breakdown-item" data-cat="shop">
+            <span class="cat-dot" style="background: #ff2a85;"></span>
+            <span class="cat-name">🛍️ 銘菓・グルメ・雑貨</span>
+            <span class="cat-stat" id="statShop">0/4</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- iOS Search Bar -->
+      <div class="ios-search-container">
+        <div class="ios-search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" class="ios-search-input" placeholder="店舗名や商品名で検索..." autocomplete="off">
+          <button type="button" id="searchClearBtn" class="search-clear-btn" aria-label="クリア" style="display: none;">✕</button>
+        </div>
+      </div>
+
+      <!-- Segmented Control (Category Switcher) -->
+      <div class="sticky-controls" id="stickyControls">
+        <div class="ios-segmented-control" role="tablist">
+          <button type="button" class="segment-btn active" data-filter="all" role="tab">すべて (6)</button>
+          <button type="button" class="segment-btn" data-filter="uncompleted" role="tab">未達成</button>
+          <button type="button" class="segment-btn" data-filter="completed" role="tab">達成済</button>
+          <button type="button" class="segment-btn" data-filter="onsen" role="tab">温泉 (2)</button>
+          <button type="button" class="segment-btn" data-filter="shop" role="tab">買い物 (4)</button>
+        </div>
+      </div>
+
+      <!-- Rally Spots List Container -->
+      <section class="rally-spots-list" id="spotsContainer" aria-label="お買い物ラリー対象店舗一覧">
+        <!-- Rendered dynamically by rally.js -->
+      </section>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">🛍️</div>
+        <div class="empty-text">該当する店舗・商品がありません</div>
+      </div>
+
+      <!-- Quick Action Buttons Footer -->
+      <div class="footer-actions">
+        <button type="button" class="ios-btn-secondary" id="shareResultBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          ラリー達成状況をポスト
+        </button>
+        <button type="button" class="ios-btn-text" id="resetConfirmBtn">
+          チェックをリセット
+        </button>
+      </div>
+
+      <!-- Cross Link Banner (カフェへの誘導) -->
+      <a href="index.html" class="rally-cross-banner">
+        <div class="cross-banner-left">
+          <span class="cross-banner-icon">🍽️</span>
+          <div>
+            <div class="cross-banner-title">お食事処なかさ コラボカフェ飯ログ</div>
+            <div class="cross-banner-sub">全16品のコラボメニュー制覇ログはこちら ›</div>
+          </div>
+        </div>
+        <span class="cross-banner-arrow">›</span>
+      </a>
+
+      <!-- Footer Disclaimer -->
+      <footer class="app-footer">
+        <div class="disclaimer-box">
+          <p class="disclaimer-title">⚠️ ご注意・免責事項</p>
+          <p class="disclaimer-text">
+            本Webアプリはファン有志による非公式の達成度記録ツールです。<br>
+            各店舗の営業時間・在庫状況・特典カードの配布状況につきましては、現地店舗の公式発表をご確認ください。<br>
+            原作公式・アニメ製作委員会・各コラボ開催店舗様とは一切関係ありません。
+          </p>
+        </div>
+      </footer>
+
+    </main>
+
+    <!-- Settings / Data Modal -->
+    <div class="modal-backdrop" id="settingsModalBackdrop">
+      <div class="ios-bottom-sheet" id="settingsModal">
+        <div class="sheet-pull-bar"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">データ管理 & バックアップ</h2>
+          <button type="button" class="sheet-close-btn" id="settingsCloseBtn" aria-label="閉じる">✕</button>
+        </div>
+        <div class="sheet-body">
+          <!-- Appearance / Theme Section -->
+          <div class="ios-cell-group">
+            <div class="ios-cell">
+              <span class="cell-label">外観テーマ</span>
+              <div class="theme-selector" id="themeSelector">
+                <button type="button" class="theme-btn active" data-theme="auto">端末連動</button>
+                <button type="button" class="theme-btn" data-theme="light">ライト</button>
+                <button type="button" class="theme-btn" data-theme="dark">ダーク</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cache Clear Warning Card -->
+          <div class="modal-warning-card">
+            <div class="warning-icon-area">⚠️</div>
+            <div class="warning-content">
+              <strong class="warning-title">端末内にのみ安全保存</strong>
+              <p class="warning-desc">記録はお使いのブラウザ（端末内）に保存されています。キャッシュクリアを行うと消去されるため、バックアップには「エクスポート」をご活用ください。</p>
+            </div>
+          </div>
+
+          <div class="ios-cell-group">
+            <div class="ios-cell interactive-cell" id="exportDataBtn">
+              <span class="cell-label">記録データをエクスポート (JSON)</span>
+              <span class="cell-chevron">›</span>
+            </div>
+            <label class="ios-cell interactive-cell" for="importFile">
+              <span class="cell-label">記録データをインポート</span>
+              <input type="file" id="importFile" accept=".json" style="display: none;">
+              <span class="cell-chevron">›</span>
+            </label>
+            <div class="ios-cell interactive-cell text-danger" id="dangerResetBtn">
+              <span class="cell-label">すべての記録を初期化</span>
+              <span class="cell-chevron">›</span>
+            </div>
+          </div>
+
+          <div class="modal-disclaimer">
+            <p><strong>【非公式ファンサイトについて】</strong></p>
+            <p>本システムは個人ファンによる非公式の達成度記録ツールです。原作公式・アニメ製作委員会・各コラボ開催店舗様とは一切関係ありません。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complete Toast / Celebration Banner -->
+    <div class="complete-toast" id="completeToast">
+      <div class="toast-star">🌟</div>
+      <div class="toast-content">
+        <div class="toast-title">全6店舗コンプリート達成！！</div>
+        <div class="toast-desc">有馬温泉お買い物ラリーをすべて制覇しました！オリジナルカード全種GETおめでとうございます！</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="rally.js"></script>
+</body>
+</html>

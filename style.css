@@ -614,6 +614,11 @@ body {
   font-size: 11.5px;
   color: var(--text-secondary);
   font-weight: 500;
+  min-width: 0;
+}
+
+.cat-name {
+  white-space: nowrap;
 }
 
 .cat-dot {
@@ -2194,6 +2199,203 @@ html[data-theme="dark"] .cell-notice-text {
   text-align: center;
   padding: 10px 0;
 }
+
+/* --------------------------------------------------------------------------
+   イベント相互ナビゲーション（コラボカフェ ⇔ お買い物ラリー）
+   プレミアム・カプセルスイッチャー
+   -------------------------------------------------------------------------- */
+.event-nav-container {
+  margin: 0 0 20px 0;
+}
+
+.event-nav-switcher {
+  display: flex;
+  background: rgba(22, 25, 42, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.event-nav-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.event-nav-tab .tab-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.event-nav-tab:hover .tab-icon {
+  transform: scale(1.15);
+}
+
+.event-nav-tab .tab-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-nav-tab .tab-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.event-nav-tab .tab-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* 非アクティブホバー */
+.event-nav-tab:not(.active):hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.event-nav-tab:not(.active):hover .tab-name {
+  color: var(--text-primary);
+}
+
+/* アクティブ共通 */
+.event-nav-tab.active {
+  color: #ffffff;
+}
+
+.event-nav-tab.active .tab-name {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.event-nav-tab.active .tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
+}
+
+/* カフェタブ（アクティブ時）: 推しの子ピンクグラデーション */
+.event-nav-tab.tab-cafe.active {
+  background: linear-gradient(135deg, #ff2a85 0%, #ff4081 100%);
+  box-shadow: 0 4px 18px rgba(255, 42, 133, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+/* ラリータブ（アクティブ時）: 推しの子シアン×ピンクのスターライトグラデーション */
+.event-nav-tab.tab-rally.active {
+  background: linear-gradient(135deg, #00b0ff 0%, #ff2a85 100%);
+  box-shadow: 0 4px 18px rgba(0, 176, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+/* レスポンシブ調整（スマホ幅） */
+@media (max-width: 380px) {
+  .event-nav-tab {
+    padding: 8px 8px;
+    gap: 5px;
+  }
+  .event-nav-tab .tab-icon {
+    font-size: 16px;
+  }
+  .event-nav-tab .tab-name {
+    font-size: 12px;
+  }
+  .event-nav-tab .tab-badge {
+    display: none;
+  }
+}
+
+/* ライトモード対応 */
+[data-theme="light"] .event-nav-switcher,
+:root:not([data-theme="dark"]) .event-nav-switcher {
+  background: rgba(240, 242, 248, 0.88);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .event-nav-tab:not(.active) .tab-name,
+:root:not([data-theme="dark"]) .event-nav-tab:not(.active) .tab-name {
+  color: rgba(30, 32, 45, 0.65);
+}
+
+[data-theme="light"] .event-nav-tab:not(.active) .tab-badge,
+:root:not([data-theme="dark"]) .event-nav-tab:not(.active) .tab-badge {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(30, 32, 45, 0.55);
+}
+
+.rally-cross-banner {
+  background: linear-gradient(135deg, rgba(255, 42, 133, 0.12) 0%, rgba(0, 176, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 42, 133, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.rally-cross-banner:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 42, 133, 0.45);
+  box-shadow: 0 6px 20px rgba(255, 42, 133, 0.15);
+}
+
+.cross-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cross-banner-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.cross-banner-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.cross-banner-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cross-banner-arrow {
+  color: var(--text-tertiary);
+  font-size: 18px;
+  font-weight: 300;
+}
+
 
 
 
