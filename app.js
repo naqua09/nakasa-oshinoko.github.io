@@ -1265,17 +1265,9 @@ function shareCurrentProgress() {
 
   const shareUrl = window.location.href;
 
-  if (navigator.share) {
-    navigator.share({
-      title: title,
-      text: shareText,
-      url: shareUrl
-    }).catch(() => {});
-  } else {
-    // X (Twitter) Web Intent
-    const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(xUrl, '_blank', 'noopener,noreferrer');
-  }
+  // X (Twitter) Web Intentで直接開く（iOSでの本文欠落バグを回避）
+  const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  window.open(xUrl, '_blank', 'noopener,noreferrer');
 }
 
 // 全チェックリセット
