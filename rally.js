@@ -91,6 +91,7 @@ const THEME_STORAGE_KEY = 'nakasa_oshinoko_theme_preference';
 // {
 //   [spotId]: {
 //     completed: boolean,
+//     count: number, // 訪問・利用回数（周回判定用: 1周目で1, 2周目で2...）
 //     date: string, // YYYY-MM-DD
 //     memo: string
 //   }
@@ -99,6 +100,28 @@ let rallyLogs = {};
 let currentFilter = 'all';
 let currentSearchQuery = '';
 let editingSpotId = null;
+let currentViewLap = 1; // 現在表示・操作中の周回 (1, 2, 3...)
+let previousCompleted = false; // お祝い演出トリガー用
+
+// スポットログ取得・下位互換性マイグレーションヘルパー
+function getSpotLog(id) {
+  if (!rallyLogs[id]) {
+    rallyLogs[id] = {
+      completed: false,
+      count: 0,
+      date: '',
+      memo: ''
+    };
+  }
+
+  // 既存データ（v1形式: count未定義）からの正規化
+  if (typeof rallyLogs[id].count !== 'number') {
+    rallyLogs[id].count = rallyLogs[id].completed ? 1 : 0;
+  }
+  rallyLogs[id].completed = rallyLogs[id].count > 0;
+
+  return rallyLogs[id];
+}
 
 // ==========================================================================
 // 3. 初期化処理
@@ -107,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   generateStars();
   loadLogs();
+  currentViewLap = getActiveLap();
   initEventListeners();
   renderAll();
 });
@@ -177,9 +201,10 @@ function saveLogs() {
 }
 
 // ==========================================================================
-// 5. 統計・集計計算
+// 5. 周回（Lap）進捗計算 & 統計
 // ==========================================================================
-function calculateStats() {
+// 指定した周回 (lap = 1, 2, 3...) における進捗を計算
+function getLapProgress(lap = 1) {
   const total = RALLY_DATA.length; // 6
   let completedCount = 0;
   let onsenCompleted = 0;
@@ -188,7 +213,9 @@ function calculateStats() {
   let shopTotal = 0;
 
   RALLY_DATA.forEach(spot => {
-    const isDone = Boolean(rallyLogs[spot.id] && rallyLogs[spot.id].completed);
+    const log = getSpotLog(spot.id);
+    const isDone = (log.count >= lap);
+
     if (spot.category === 'onsen') {
       onsenTotal++;
       if (isDone) onsenCompleted++;
@@ -202,10 +229,11 @@ function calculateStats() {
     }
   });
 
-  const percent = Math.round((completedCount / total) * 100);
-  const isCompleted = completedCount === total;
+  const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  const isCompleted = (completedCount === total && total > 0);
 
   return {
+    lap,
     total,
     completedCount,
     percent,
@@ -217,6 +245,46 @@ function calculateStats() {
   };
 }
 
+// 累計カード獲得枚数の算出
+function getTotalCardCount() {
+  return RALLY_DATA.reduce((sum, spot) => {
+    const log = getSpotLog(spot.id);
+    return sum + (log.count || 0);
+  }, 0);
+}
+
+// 選択・表示可能な最大周回数を算出
+function getMaxAvailableLap() {
+  const lap1 = getLapProgress(1);
+  let maxCount = 0;
+  RALLY_DATA.forEach(spot => {
+    const log = getSpotLog(spot.id);
+    if (log.count > maxCount) maxCount = log.count;
+  });
+
+  // 1周目を全制覇していれば、最低でも2周目まで選べる
+  if (lap1.isCompleted) {
+    return Math.max(2, maxCount + 1);
+  }
+  // 1周目未制覇でも2回以上利用したものがあればその回数まで選べる
+  return Math.max(1, maxCount);
+}
+
+// 現在ユーザーが挑戦中の最新周回数を算出
+function getActiveLap() {
+  const maxLap = getMaxAvailableLap();
+  for (let l = 1; l <= maxLap; l++) {
+    const p = getLapProgress(l);
+    if (!p.isCompleted) return l;
+  }
+  return maxLap;
+}
+
+// 互換用: 現在選択中の周回の進捗を返す
+function calculateStats() {
+  return getLapProgress(currentViewLap);
+}
+
 // ==========================================================================
 // 6. UIレンダリング
 // ==========================================================================
@@ -225,9 +293,14 @@ function renderAll() {
   renderSpotList();
 }
 
-// プログレスサマリーの描画
+// プログレスサマリーの描画（周回対応）
 function renderProgress() {
-  const stats = calculateStats();
+  const maxLap = getMaxAvailableLap();
+  if (currentViewLap > maxLap) currentViewLap = maxLap;
+  if (currentViewLap < 1) currentViewLap = 1;
+
+  const stats = getLapProgress(currentViewLap);
+  const totalCards = getTotalCardCount();
 
   const completedCountEl = document.getElementById('completedCount');
   const progressFillEl = document.getElementById('progressFill');
@@ -236,6 +309,8 @@ function renderProgress() {
   const cardCountEl = document.getElementById('cardCount');
   const statOnsenEl = document.getElementById('statOnsen');
   const statShopEl = document.getElementById('statShop');
+  const lapPillGroup = document.getElementById('lapPillGroup');
+  const progressLabel = document.getElementById('progressLabel');
 
   if (completedCountEl) completedCountEl.textContent = stats.completedCount;
   if (progressFillEl) progressFillEl.style.width = `${stats.percent}%`;
@@ -252,7 +327,11 @@ function renderProgress() {
   }
 
   if (cardCountEl) {
-    cardCountEl.textContent = `${stats.completedCount} / ${stats.total} 枚`;
+    if (maxLap > 1) {
+      cardCountEl.textContent = `${stats.completedCount} / ${stats.total} 枚 (累計 ${totalCards}枚)`;
+    } else {
+      cardCountEl.textContent = `${stats.completedCount} / ${stats.total} 枚`;
+    }
     if (stats.isCompleted) {
       cardCountEl.classList.add('gold');
     } else {
@@ -263,9 +342,48 @@ function renderProgress() {
   if (statOnsenEl) {
     statOnsenEl.textContent = `${stats.onsenCompleted}/${stats.onsenTotal}`;
   }
+
   if (statShopEl) {
     statShopEl.textContent = `${stats.shopCompleted}/${stats.shopTotal}`;
   }
+
+  // 周回切り替えピル（maxLap > 1 の時のみ表示）
+  if (lapPillGroup) {
+    if (maxLap > 1) {
+      lapPillGroup.style.display = 'inline-flex';
+      lapPillGroup.innerHTML = '';
+
+      for (let l = 1; l <= maxLap; l++) {
+        const lapStats = getLapProgress(l);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `lap-pill-btn ${l === currentViewLap ? 'active' : ''} ${lapStats.isCompleted ? 'is-completed' : ''}`;
+        btn.textContent = `${l}周目${lapStats.isCompleted ? '✓' : ''}`;
+        btn.setAttribute('data-lap', l);
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentViewLap = l;
+          renderAll();
+        });
+        lapPillGroup.appendChild(btn);
+      }
+
+      if (progressLabel) {
+        progressLabel.textContent = `${currentViewLap}周目 ラリー達成度`;
+      }
+    } else {
+      lapPillGroup.style.display = 'none';
+      if (progressLabel) {
+        progressLabel.textContent = 'ラリー達成度';
+      }
+    }
+  }
+
+  // 周回コンプリート（100%達成）時の祝福演出
+  if (stats.isCompleted && !previousCompleted && stats.total > 0) {
+    showCompleteToast(currentViewLap);
+  }
+  previousCompleted = stats.isCompleted;
 }
 
 // 店舗カード一覧の描画
@@ -279,8 +397,9 @@ function renderSpotList() {
   let visibleCount = 0;
 
   RALLY_DATA.forEach((spot, index) => {
-    const isCompleted = Boolean(rallyLogs[spot.id] && rallyLogs[spot.id].completed);
-    const spotLog = rallyLogs[spot.id] || {};
+    const spotLog = getSpotLog(spot.id);
+    // 現在選択中の周回で達成しているか
+    const isCompleted = spotLog.count >= currentViewLap;
 
     // フィルタリング判定
     if (currentFilter === 'uncompleted' && isCompleted) return;
@@ -304,10 +423,6 @@ function renderSpotList() {
     card.className = `rally-spot-card ${isCompleted ? 'completed' : ''}`;
     card.id = `card_${spot.id}`;
 
-    // メモと日付のフォーマット
-    const hasMemo = Boolean(spotLog.memo && spotLog.memo.trim().length > 0);
-    const hasDate = Boolean(spotLog.date);
-
     let specialWarningHtml = '';
     if (spot.specialNotice) {
       specialWarningHtml = `
@@ -321,6 +436,22 @@ function renderSpotList() {
       `;
     }
 
+    // 周回・カード獲得バッジの文言
+    let badgeText = '';
+    if (currentViewLap === 1) {
+      badgeText = isCompleted ? 'オリジナルカード獲得済！' : 'オリジナルカード対象';
+    } else {
+      badgeText = isCompleted 
+        ? `${currentViewLap}周目カード獲得済！` 
+        : `${currentViewLap}周目カード対象`;
+    }
+
+    // 複数回訪問している場合のカウント表示
+    let countBadgeHtml = '';
+    if (spotLog.count > 0) {
+      countBadgeHtml = `<span class="spot-visit-count-badge">訪問: ${spotLog.count}回</span>`;
+    }
+
     card.innerHTML = `
       <div class="spot-card-top">
         <div class="spot-info-left">
@@ -330,6 +461,7 @@ function renderSpotList() {
               <span>${spot.categoryIcon}</span>
               ${spot.categoryLabel}
             </span>
+            ${countBadgeHtml}
           </div>
           <h3 class="spot-name">
             ${escapeHtml(spot.name)}
@@ -362,7 +494,7 @@ function renderSpotList() {
         <div class="spot-card-status-info">
           <span class="card-reward-badge">
             <span>🎁</span>
-            ${isCompleted ? 'オリジナルカード獲得済！' : 'オリジナルカード対象'}
+            ${badgeText}
           </span>
         </div>
         <a href="${spot.mapUrl || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(spot.mapQuery))}" 
@@ -460,51 +592,70 @@ function initEventListeners() {
   document.getElementById('resetConfirmBtn')?.addEventListener('click', resetAllData);
 }
 
-// 達成状況トグル
+// 達成状況トグル（周回対応）
 function toggleSpotCompletion(spotId) {
-  if (!rallyLogs[spotId]) {
-    rallyLogs[spotId] = {
-      completed: false,
-      date: '',
-      memo: ''
-    };
-  }
+  const log = getSpotLog(spotId);
+  const targetLap = currentViewLap;
 
-  const prevIsDone = rallyLogs[spotId].completed;
-  rallyLogs[spotId].completed = !prevIsDone;
+  // 現在の周回ですでに達成しているか
+  const isDoneInCurrentLap = log.count >= targetLap;
 
-  // もし新規達成かつ日付が空なら今日の日付を自動セット
-  if (!prevIsDone && !rallyLogs[spotId].date) {
-    rallyLogs[spotId].date = new Date().toISOString().split('T')[0];
+  if (isDoneInCurrentLap) {
+    // 達成取り消し：この周回より前の回数に戻す
+    log.count = Math.max(0, targetLap - 1);
+  } else {
+    // 達成：この周回数まで回数を引き上げる
+    log.count = targetLap;
+    if (!log.date) {
+      log.date = new Date().toISOString().split('T')[0];
+    }
   }
+  log.completed = log.count > 0;
 
   saveLogs();
   renderAll();
 
   // コンプリート達成チェック
-  const stats = calculateStats();
-  if (stats.isCompleted && !prevIsDone) {
-    showCompleteToast();
+  const stats = getLapProgress(targetLap);
+  if (stats.isCompleted && !isDoneInCurrentLap) {
+    showCompleteToast(targetLap);
   }
 }
 
-
-
 // ==========================================================================
-// 9. X（Twitter）シェア機能
+// 9. X（Twitter）シェア機能（周回対応）
 // ==========================================================================
 function shareRallyStatus() {
-  const stats = calculateStats();
+  const stats = getLapProgress(currentViewLap);
+  const lap1Stats = getLapProgress(1);
+  const totalCards = getTotalCardCount();
   const title = '【推しの子】× 有馬温泉 お買い物ラリー達成度ログ';
 
   let shareText = `【推しの子】× 有馬温泉 お買い物ラリー\n`;
 
-  if (stats.isCompleted) {
-    shareText += `🎉 全${stats.total}店舗完全制覇！！🌟\n`;
-    shareText += `🎁 特典オリジナルカード全種コンプリート達成！\n\n`;
+  if (currentViewLap === 1) {
+    if (stats.isCompleted) {
+      shareText += `🎉 全${stats.total}店舗完全制覇！！🌟\n`;
+      shareText += `🎁 特典オリジナルカード全種コンプリート達成！\n\n`;
+    } else {
+      shareText += `全${stats.total}店舗中 ${stats.completedCount}店舗達成（達成率${stats.percent}%）！⭐\n`;
+      shareText += `🎁 特典カード: ${stats.completedCount}/${stats.total}枚獲得\n\n`;
+    }
   } else {
-    shareText += `全${stats.total}店舗中 ${stats.completedCount}店舗達成（達成率${stats.percent}%）！⭐\n`;
-    shareText += `🎁 特典カード: ${stats.completedCount}/${stats.total}枚獲得\n\n`;
+    // 2周目以降
+    if (stats.isCompleted) {
+      const stars = '🌟'.repeat(Math.min(currentViewLap, 4));
+      shareText += `🎊 ${currentViewLap}周目 全${stats.total}店舗完全制覇！！${stars}\n`;
+      shareText += `🎁 特典カード累計: ${totalCards}枚獲得（全${stats.total}店舗 × ${currentViewLap}周制覇）\n\n`;
+    } else {
+      shareText += `🔥 ${currentViewLap}周目挑戦中！ ${stats.completedCount}/${stats.total}店舗達成（達成率${stats.percent}%）⭐\n`;
+      if (currentViewLap === 2 && lap1Stats.isCompleted) {
+        shareText += `（1周目全6店舗制覇済🎉）\n`;
+      } else if (currentViewLap > 2) {
+        shareText += `（${currentViewLap - 1}周目まで全店舗制覇済🎉）\n`;
+      }
+      shareText += `🎁 特典カード累計: ${totalCards}枚獲得\n\n`;
+    }
   }
 
   shareText += `#推しの子 #お食事処なかさ #なかさ推しの子コラボ`;
@@ -517,11 +668,24 @@ function shareRallyStatus() {
 }
 
 // ==========================================================================
-// 10. コンプリートお祝い演出
+// 10. コンプリートお祝い演出（周回対応）
 // ==========================================================================
-function showCompleteToast() {
+function showCompleteToast(lap = 1) {
   const toast = document.getElementById('completeToast');
   if (!toast) return;
+
+  const toastTitle = toast.querySelector('.toast-title');
+  const toastDesc = toast.querySelector('.toast-desc');
+
+  if (toastTitle && toastDesc) {
+    if (lap > 1) {
+      toastTitle.textContent = `🎉 ${lap}周目 全店舗完全制覇！！`;
+      toastDesc.textContent = `全6店舗 × ${lap}周制覇！素晴らしい推し活記録です⭐`;
+    } else {
+      toastTitle.textContent = '🎉 全店舗完全制覇！！';
+      toastDesc.textContent = 'お買い物ラリー全店舗制覇おめでとうございます！オリジナルカード全種コンプリート達成！🌟';
+    }
+  }
 
   toast.classList.add('show');
   setTimeout(() => {
